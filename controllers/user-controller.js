@@ -3,6 +3,15 @@ const handle = require("../utils/promise-handler.js");
 const jwt = require("jsonwebtoken");
 const secret = "DRqjrk2hnhbg9ngt@1!"
 
+const getAllMovies = (req, res) => {
+    Movies.findAll({}).then(data => {
+        res.json(data);
+    }).catch(err => {
+        console.log(err);
+        res.json(err);
+    })
+}
+
 const register = (req, res) => {
     // console.log("request: ", req);
     const { firstName, lastName, email, password } = req.body;
@@ -25,52 +34,53 @@ const register = (req, res) => {
 const login = async (req, res) => {
     // get email and password out of req.body
     const { email, password } = req.body;
-  
+
     // find user based on email
     const [findUserErr, userInfo] = await handle(User.findOne({ email }));
-  
+
     if (findUserErr) {
-    //   console.log(findUserErr);
-      res.status(500).json({
-        error: 'Internal error, try again'
-      });
-    } else if (!userInfo) {
-      res.status(401).json({
-        error: 'Incorrect email'
-      });
-    } else {
-      // check to see if password matches user's password
-      const [pwErr, same] = await handle(userInfo.validPassword(password));
-  
-      if (pwErr) {
+        //   console.log(findUserErr);
         res.status(500).json({
-          error: 'Internal error please try again!'
+            error: 'Internal error, try again'
         });
-      } else if (!same) {
+    } else if (!userInfo) {
         res.status(401).json({
-          error: 'Incorrect password!'
+            error: 'Incorrect email'
         });
-      } else {
-        // issue our JWT
-        const payload = {
-          id: userInfo.id,
-          email: userInfo.email
-        };
-        // sign jwt
-        const token = jwt.sign(payload, secret, {
-          expiresIn: '2h'
-        });
-  
-        // respond with web token to the front end
-        res.status(200).json(token);
-  
-        // if you want to use session cookies instead...
-        // res.cookie('token', token, {httpOnly: true})
-      }
+    } else {
+        // check to see if password matches user's password
+        const [pwErr, same] = await handle(userInfo.validPassword(password));
+
+        if (pwErr) {
+            res.status(500).json({
+                error: 'Internal error please try again!'
+            });
+        } else if (!same) {
+            res.status(401).json({
+                error: 'Incorrect password!'
+            });
+        } else {
+            // issue our JWT
+            const payload = {
+                id: userInfo.id,
+                email: userInfo.email
+            };
+            // sign jwt
+            const token = jwt.sign(payload, secret, {
+                expiresIn: '2h'
+            });
+
+            // respond with web token to the front end
+            res.status(200).json(token);
+
+            // if you want to use session cookies instead...
+            // res.cookie('token', token, {httpOnly: true})
+        }
     }
-  };
+};
 
 module.exports = {
     register,
-    login
+    login, 
+    getAllMovies
 };
